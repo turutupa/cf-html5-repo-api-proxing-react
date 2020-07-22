@@ -6,7 +6,7 @@ It contains these folders and files, following our recommended project layout:
 
 | File / Folder   | Purpose                                                                        |
 | --------------- | ------------------------------------------------------------------------------ |
-| `app/`          | react application with hash routing added                                      |
+| `app/`          | react application with proxing                                                 |
 | `approuter`     | approuter with routes to backend and html5 application from HTML5 Repo Service |
 | `db/`           | your domain models go here, defaults added                                     |
 | `srv/`          | your service models and code go here, defaults added                           |
