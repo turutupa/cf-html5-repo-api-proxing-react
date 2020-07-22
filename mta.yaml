@@ -1,0 +1,125 @@
+## Generated mta.yaml based on template version 0.2.0
+## appName = cf-html5-repo-api-proxing-react-documentation-test
+## language=nodejs; multiTenant=false
+## approuter=
+_schema-version: '3.1'
+ID: cf-html5-repo-api-proxing-react
+version: 1.0.0
+description: 'A simple CAP project.'
+parameters:
+  enable-parallel-deployments: true
+  deploy_mode: html5-repo
+
+build-parameters:
+  before-all:
+    - builder: custom
+      commands:
+        - npm install
+        - npx cds build
+        - npm --prefix ./app install ./app
+        - npm run build --prefix ./app
+
+modules:
+  # --------------------- SERVER MODULE ------------------------
+  - name: cf-html5-repo-api-proxing-react-srv
+    # ------------------------------------------------------------
+    type: nodejs
+    path: gen/srv
+    properties:
+      EXIT: 1 # required by deploy.js task to terminate
+    requires:
+      # Resources extracted from CAP configuration
+      - name: cf-html5-repo-api-proxing-react-hdi
+    provides:
+      - name: srv-binding # required by consumers of CAP services (e.g. approuter)
+        properties:
+          srv-url: ${default-url}
+
+  # -------------------- SIDECAR MODULE ------------------------
+  - name: cf-html5-repo-api-proxing-react-db
+    # ------------------------------------------------------------
+    type: hdb
+    path: gen/db
+    parameters:
+      app-name: cf-html5-repo-api-proxing-react-hdi
+    requires:
+      # 'hana' and 'xsuaa' resources extracted from CAP configuration
+      - name: cf-html5-repo-api-proxing-react-hdi
+
+  # --------------------- HTML5DEPLOYER MODULE -----------------
+  - name: cf-html5-repo-api-proxing-react-hmtl5-deployer
+    # ------------------------------------------------------------
+    type: com.sap.html5.application-content
+    path: html5Deployer
+    requires:
+      - name: cf-html5-repo-api-proxing-react-html5-host
+    build-parameters:
+      requires:
+        - name: cf-html5-repo-api-proxing-react-app
+          artifacts:
+            - './*'
+          target-path: resources/app
+
+  # --------------------- REACT APP MODULE ---------------------
+  - name: cf-html5-repo-api-proxing-react-app
+    # ------------------------------------------------------------
+    type: html5
+    path: app
+    build-parameters:
+      supported-platforms: []
+      build-result: build
+
+  # --------------------- APPROUTER MODULE ---------------------
+  - name: cf-html5-repo-api-proxing-react-approuter
+    # ------------------------------------------------------------
+    type: approuter.nodejs
+    path: approuter
+    requires:
+      - name: cf-html5-repo-api-proxing-react-html5-runtime
+      - name: cf-html5-repo-api-proxing-react-xsuaa
+      - name: srv-binding
+        group: destinations
+        properties:
+          name: srv-binding
+          url: ~{srv-url}
+          forwardAuthToken: true
+
+resources:
+  # services extracted from CAP configuration
+  # 'service-plan' can be configured via 'cds.requires.<name>.vcap.plan'
+  # ------------------------------------------------------------
+  - name: cf-html5-repo-api-proxing-react-hdi
+    # ------------------------------------------------------------
+    type: com.sap.xs.hdi-container
+    parameters:
+      service: hana # or 'hanatrial' on trial landscapes
+      service-plan: hdi-shared
+    properties:
+      hdi-service-name: ${service-name}
+
+  # --------------------- HTML5 Runtime ----------------------
+  - name: cf-html5-repo-api-proxing-react-html5-runtime
+    # ------------------------------------------------------------
+    parameters:
+      service-name: cf-html5-repo-api-proxing-react-html5-runtime
+      service-plan: app-runtime
+      service: html5-apps-repo
+    type: org.cloudfoundry.managed-service
+
+  # --------------------- HTML5 Host -------------------------
+  - name: cf-html5-repo-api-proxing-react-html5-host
+    # ------------------------------------------------------------
+    parameters:
+      service-name: cf-html5-repo-api-proxing-react-html5-host
+      service-plan: app-host
+      service: html5-apps-repo
+    type: org.cloudfoundry.managed-service
+
+  # --------------------- XSUAA Service ---------------------
+  - name: cf-html5-repo-api-proxing-react-xsuaa
+    # ------------------------------------------------------------
+    parameters:
+      path: ./xs-security.json
+      service-plan: application
+      service: xsuaa
+    type: org.cloudfoundry.managed-service
