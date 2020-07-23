@@ -34,7 +34,7 @@ async function submitBook({ title, price, stock }) {
       ID: Math.floor(Math.random() * 9999),
       descr: '',
       price: String(price),
-      stock,
+      stock: Number(stock),
       title,
     }),
   });
@@ -61,12 +61,20 @@ function Books() {
     <div>
       <form
         style={{ textAlign: 'center' }}
-        onSubmit={async () => {
-          await submitBook({ title, price, stock });
-          setTitle('');
-          setBooks(await fetchBooks());
+        onSubmit={async (e) => {
+          e.preventDefault();
+          const newBook = await submitBook({ title, price, stock });
+          if (newBook.error) {
+            return console.log(newBook.error.message);
+          } else {
+            setTitle('');
+            setPrice(19.99);
+            setStock(400);
+            setBooks(await fetchBooks());
+          }
         }}
       >
+        <label>Title </label>
         <input
           value={title}
           placeholder='Book title'
@@ -74,17 +82,21 @@ function Books() {
           required
         ></input>
 
+        <label> Price </label>
         <input
           type='number'
           value={price}
           onChange={(e) => setPrice(e.target.value)}
         ></input>
 
+        <label> Stock </label>
         <input
           type='number'
           value={stock}
           onChange={(e) => setStock(e.target.value)}
         />
+        <br />
+        <br />
         <button type='submit'>Upload Book</button>
       </form>
       {books && renderBooks(books)}
