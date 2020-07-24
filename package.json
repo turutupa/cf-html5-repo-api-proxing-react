@@ -7,22 +7,24 @@
   "private": true,
   "dependencies": {
     "@sap/cds": "^3",
-    "express": "^4",
     "@sap/cds-dk": "^1.8.5",
+    "@sap/hana-client": "^2.4.0",
     "concurrently": "^5.2.0",
-    "@sap/hana-client": "^2.4.0"
+    "express": "^4",
+    "sqlite3": "^5.0.0"
   },
   "scripts": {
     "start": "npx cds run",
     "dev:cds": "npx cds watch",
     "dev:app": "npm start --prefix app",
     "dev": "concurrently npm:dev:*",
-    "watch": "npx cds watch"
+    "watch": "npx cds watch",
+    "build": "npx mbt build"
   },
   "cds": {
     "requires": {
       "db": {
-        "kind": "sql"
+        "kind": "sqlite"
       }
     }
   }
